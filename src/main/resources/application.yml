@@ -7,3 +7,4 @@ spring:
     password:
     url: jdbc:h2:tcp://localhost/~/jwt
     driver-class-name: org.h2.Driver
+

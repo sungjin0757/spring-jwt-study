@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import study.jwt.domain.User;
 import study.jwt.domain.dto.UserDto;
 import study.jwt.domain.value.Role;
+import study.jwt.exception.DuplicateEmailException;
+import study.jwt.exception.LoginFailureException;
 import study.jwt.repository.UserRepository;
 
 import java.util.Arrays;
@@ -58,7 +60,9 @@ public class UserServiceTest {
         org.junit.jupiter.api.Assertions.assertThrows(UsernameNotFoundException.class,()->{
            userService.loadUserByUsername("123");
         });
-
+        org.junit.jupiter.api.Assertions.assertThrows(DuplicateEmailException.class,()->{
+           userService.signup(dtos.get(0));
+        });
     }
 
 

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import study.jwt.domain.User;
 import study.jwt.domain.dto.UserDto;
 import study.jwt.domain.value.Role;
+import study.jwt.exception.DuplicateEmailException;
 import study.jwt.repository.UserRepository;
 import study.jwt.security.PrincipalDetails;
 
@@ -24,6 +25,9 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public Long signup(UserDto userDto) {
+        if(validateUser(userDto.getEmail())){
+            throw new DuplicateEmailException("Duplicate Email!");
+        }
         User user=mappingUser(userDto.getEmail(), userDto.getPassword());
         userRepository.save(user);
 
@@ -44,5 +48,11 @@ public class UserServiceImpl implements UserService{
                 .password(passwordEncoder.encode(password))
                 .role(Role.ROLE_USER)
                 .build();
+    }
+
+    private boolean validateUser(String email){
+        if(userRepository.findByEmail(email).isEmpty())
+            return false;
+        return true;
     }
 }
