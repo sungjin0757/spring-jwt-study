@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import study.jwt.domain.User;
 import study.jwt.domain.dto.UserDto;
+import study.jwt.domain.dto.UserLoginDto;
 import study.jwt.domain.value.Role;
 import study.jwt.exception.DuplicateEmailException;
 import study.jwt.exception.LoginFailureException;
@@ -57,11 +58,37 @@ public class UserServiceTest {
         }
 
         Assertions.assertThat(userRepository.count()).isEqualTo(3);
-        org.junit.jupiter.api.Assertions.assertThrows(UsernameNotFoundException.class,()->{
-           userService.loadUserByUsername("123");
-        });
+
         org.junit.jupiter.api.Assertions.assertThrows(DuplicateEmailException.class,()->{
            userService.signup(dtos.get(0));
+        });
+    }
+
+    @Test
+    @DisplayName("Login Test")
+    void 로그인_테스트(){
+        userService.signup(dtos.get(0));
+        UserLoginDto userLoginDto= UserLoginDto.createUserDto()
+                .email(dtos.get(0).getEmail())
+                .password(dtos.get(0).getPassword())
+                .build();
+
+        User loginUser = userService.login(userLoginDto);
+        Assertions.assertThat(loginUser.getEmail()).isEqualTo(userLoginDto.getEmail());
+        Assertions.assertThat(passwordEncoder.matches(userLoginDto.getPassword(), loginUser.getPassword()))
+                .isEqualTo(true);
+
+        org.junit.jupiter.api.Assertions.assertThrows(LoginFailureException.class,()->{
+            userService.login(UserLoginDto.createUserDto()
+                    .email("2")
+                    .password("3")
+                    .build());
+        });
+        org.junit.jupiter.api.Assertions.assertThrows(LoginFailureException.class,()->{
+            userService.login(UserLoginDto.createUserDto()
+                    .email("1")
+                    .password("3")
+                    .build());
         });
     }
 

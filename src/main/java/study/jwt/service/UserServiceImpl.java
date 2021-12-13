@@ -1,19 +1,16 @@
 package study.jwt.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import study.jwt.domain.User;
 import study.jwt.domain.dto.UserDto;
+import study.jwt.domain.dto.UserLoginDto;
 import study.jwt.domain.value.Role;
 import study.jwt.exception.DuplicateEmailException;
+import study.jwt.exception.LoginFailureException;
 import study.jwt.repository.UserRepository;
-import study.jwt.security.PrincipalDetails;
-
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -35,11 +32,19 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userRepository.findByEmail(email).map(u->new PrincipalDetails(u))
-                .orElseThrow(()->{
-                    throw new UsernameNotFoundException("Not Found");
-                });
+    public User login(UserLoginDto userLoginDto) {
+        User findUser=getUserByEmail(userLoginDto.getEmail());
+        if(findUser!=null){
+            if(matchPassword(userLoginDto.getPassword(),findUser)){
+                return findUser;
+            }
+        }
+        throw new LoginFailureException("Not Exist User!");
+    }
+
+    @Override
+    public User getUserByEmail(String email){
+        return userRepository.findByEmail(email).orElse(null);
     }
 
     private User mappingUser(String email,String password){
@@ -51,8 +56,15 @@ public class UserServiceImpl implements UserService{
     }
 
     private boolean validateUser(String email){
-        if(userRepository.findByEmail(email).isEmpty())
+        if(getUserByEmail(email)==null)
             return false;
         return true;
+    }
+
+    private boolean matchPassword(String password,User user){
+        if(passwordEncoder.matches(password,user.getPassword())){
+            return true;
+        }
+        return false;
     }
 }

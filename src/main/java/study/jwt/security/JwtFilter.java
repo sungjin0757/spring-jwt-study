@@ -1,5 +1,6 @@
 package study.jwt.security;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -7,8 +8,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import study.jwt.domain.User;
 import study.jwt.domain.value.Role;
 import study.jwt.exception.JwtException;
+import study.jwt.service.UserService;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -19,7 +22,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @Slf4j
+@RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
+
+    private final UserService userService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -28,18 +34,11 @@ public class JwtFilter extends OncePerRequestFilter {
             String jwt=getJwt(request);
             if(StringUtils.hasText(jwt) && JwtProvider.validateJwt(jwt)){
                 String userName = JwtProvider.getUsernameFromJwt(jwt);
-
-                Collection<GrantedAuthority> authorities=new ArrayList<>();
-                authorities.add(new GrantedAuthority() {
-                    @Override
-                    public String getAuthority() {
-                        return Role.ROLE_USER.getValue();
-                    }
-                });
+                User findUser = userService.getUserByEmail(userName);
 
                 Authentication authentication= new UsernamePasswordAuthenticationToken(userName,
                         null,
-                        authorities);
+                        AuthorityExtract.getAuthorities(findUser));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }else if(!StringUtils.hasText(jwt)){
                 request.setAttribute("UnAuthorized","Empty Token");
@@ -48,13 +47,14 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }catch (Exception e){
             log.error("Exception Occurred : {}",e.getMessage());
-            throw new JwtException(e.getMessage(),e.getCause());
+//            throw new JwtException(e.getMessage(),e.getCause());
         }
         filterChain.doFilter(request,response);
     }
 
     private String getJwt(HttpServletRequest request){
         String bearerToken = request.getHeader("Authorization");
+        log.info("Token : {}",bearerToken);
         if(bearerToken.startsWith("Bearer ")){
             return bearerToken.replace("Bearer ","");
         }
