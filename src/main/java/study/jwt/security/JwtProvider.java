@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
 
 @Component
 @Slf4j
@@ -35,7 +34,6 @@ public class JwtProvider {
                 return false;
             return true;
         }catch(Exception e){
-            log.error("Exception Occurred : {}",e.getMessage());
             throw e;
         }
     }

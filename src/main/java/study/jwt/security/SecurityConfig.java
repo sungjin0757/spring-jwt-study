@@ -19,11 +19,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
     private final UserService userService;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .exceptionHandling()
+                .authenticationEntryPoint(customAuthenticationEntryPoint)
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -37,8 +39,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .formLogin()
                 .disable()
                 .addFilterBefore(jwtFilter(),UsernamePasswordAuthenticationFilter.class);
-
-
     }
 
     @Bean

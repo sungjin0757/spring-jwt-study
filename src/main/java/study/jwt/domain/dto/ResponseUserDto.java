@@ -5,15 +5,13 @@ import lombok.Data;
 import study.jwt.domain.value.Role;
 
 @Data
-public class UserDto {
+public class ResponseUserDto {
     private String email;
-    private String password;
     private Role role;
 
-    @Builder(builderMethodName = "createUserDto")
-    public UserDto(String email,String password,Role role){
+    @Builder(builderMethodName = "createResponseUser")
+    public ResponseUserDto(String email,Role role){
         this.email=email;
-        this.password=password;
         this.role=role;
     }
 }

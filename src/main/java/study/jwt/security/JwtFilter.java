@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -30,9 +31,10 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
         try{
             String jwt=getJwt(request);
-            if(StringUtils.hasText(jwt) && JwtProvider.validateJwt(jwt)){
+            if(jwt!=null && JwtProvider.validateJwt(jwt)){
                 String userName = JwtProvider.getUsernameFromJwt(jwt);
                 User findUser = userService.getUserByEmail(userName);
 
@@ -40,14 +42,12 @@ public class JwtFilter extends OncePerRequestFilter {
                         null,
                         AuthorityExtract.getAuthorities(findUser));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            }else if(!StringUtils.hasText(jwt)){
-                request.setAttribute("UnAuthorized","Empty Token");
-            }else if(!JwtProvider.validateJwt(jwt)){
-                request.setAttribute("unAuthorized","Expire Token");
+            }else if(jwt==null) {
+                request.setAttribute("UnAuthorized", "Empty Token");
             }
         }catch (Exception e){
-            log.error("Exception Occurred : {}",e.getMessage());
-//            throw new JwtException(e.getMessage(),e.getCause());
+            request.setAttribute("UnAuthorized","Not Validated Jwt");
+            log.error("Exception Occurred : {}", e.getMessage());
         }
         filterChain.doFilter(request,response);
     }
@@ -55,9 +55,13 @@ public class JwtFilter extends OncePerRequestFilter {
     private String getJwt(HttpServletRequest request){
         String bearerToken = request.getHeader("Authorization");
         log.info("Token : {}",bearerToken);
-        if(bearerToken.startsWith("Bearer ")){
+        if(bearerToken==null){
+            bearerToken="";
+        }
+        if( bearerToken.startsWith("Bearer ")){
             return bearerToken.replace("Bearer ","");
         }
         return null;
     }
+
 }

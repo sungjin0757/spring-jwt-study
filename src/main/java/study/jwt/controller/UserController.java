@@ -9,10 +9,12 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import study.jwt.domain.User;
+import study.jwt.domain.dto.ResponseUserDto;
 import study.jwt.domain.dto.UserDto;
 import study.jwt.domain.dto.UserLoginDto;
 import study.jwt.exception.DuplicateEmailException;
 import study.jwt.exception.JwtException;
+import study.jwt.exception.LoginFailureException;
 import study.jwt.security.AuthorityExtract;
 import study.jwt.security.JwtProvider;
 import study.jwt.service.UserService;
@@ -32,7 +34,7 @@ public class UserController {
     public ResponseEntity<String> signup(@RequestBody UserDto userDto)  {
         userService.signup(userDto);
 
-        return new ResponseEntity<>("Login Success",HttpStatus.CREATED);
+        return new ResponseEntity<>("Enroll Success",HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
@@ -45,13 +47,18 @@ public class UserController {
         return new ResponseEntity<>(token,HttpStatus.OK);
     }
 
+    @RequestMapping("/jwt-exception")
+    public void exception(@RequestParam String error){
+        throw new JwtException(error);
+    }
+
     @GetMapping("/test")
-    public UserDto getUser(@AuthenticationPrincipal String username){
+    public ResponseUserDto getUser(@AuthenticationPrincipal String username){
         User findUser = userService.getUserByEmail(username);
 
-        return UserDto.createUserDto()
+        return ResponseUserDto.createResponseUser()
                 .email(findUser.getEmail())
-                .password(findUser.getPassword())
+                .role(findUser.getRole())
                 .build();
     }
 }

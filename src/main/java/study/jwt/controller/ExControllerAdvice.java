@@ -26,8 +26,7 @@ public class ExControllerAdvice {
     }
 
     @ExceptionHandler(JwtException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResult notValidateJwt(JwtException e){
-        return new ErrorResult("NOT_VALIDATE",e.getMessage());
+    public ResponseEntity<ErrorResult> notValidateJwt(JwtException e){
+        return new ResponseEntity<>(new ErrorResult("NOT_VALIDATE",e.getMessage()),HttpStatus.UNAUTHORIZED);
     }
 }
